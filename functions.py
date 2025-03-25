@@ -18,20 +18,22 @@ def showDialog():
     msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     returnValue = msgBox.exec()
 
-def generateHistogramme_Color(filenames, progressBar):
+def generateHistogramme_Color(filenames, progressBar,listImages):
     if not os.path.isdir("BGR"):
         os.mkdir("BGR")
     i=0
-    for path in os.listdir(filenames):
-        img = cv2.imread(filenames+"/"+path)
+
+    for path in listImages:
+        img = cv2.imread(path)
         histB = cv2.calcHist([img],[0],None,[256],[0,256])
         histG = cv2.calcHist([img],[1],None,[256],[0,256])
         histR = cv2.calcHist([img],[2],None,[256],[0,256])
         feature = np.concatenate((histB, np.concatenate((histG,histR),axis=None)),axis=None)
 
-        num_image, _ = path.split(".")
-        np.savetxt("BGR/"+str(num_image)+".txt" ,feature)
-        progressBar.setValue(100*((i+1)/len(os.listdir(filenames))))
+        saving_path = path.split("/")[-1]
+        image, _ = saving_path.split(".")
+        np.savetxt("BGR/"+str(image)+".txt" ,feature)
+        progressBar.setValue(100*((i+1)/len(listImages)))
         i+=1
     print("indexation Hist Couleur terminée !!!!")
 
@@ -47,6 +49,7 @@ def generateHistogramme_HSV(filenames, progressBar, listImages):
         histS = cv2.calcHist([img],[1],None,[256],[0,256])
         histV = cv2.calcHist([img],[2],None,[256],[0,256])
         feature = np.concatenate((histH, np.concatenate((histS,histV),axis=None)),axis=None)
+
         saving_path = path.split("/")[-1]
         image, _ = saving_path.split(".")
         np.savetxt("HSV/"+str(image)+".txt" ,feature)
@@ -55,48 +58,58 @@ def generateHistogramme_HSV(filenames, progressBar, listImages):
     print("indexation Hist HSV terminée !!!!")
     
         
-def generateSIFT(filenames, progressBar):
+def generateSIFT(filenames, progressBar,listImages):
     if not os.path.isdir("SIFT"):
         os.mkdir("SIFT")
     i=0
-    for path in os.listdir(filenames):
-        img = cv2.imread(filenames+"/"+path)
+    for path in listImages:
+        img = cv2.imread(path)
         featureSum = 0
         sift = cv2.SIFT_create()  
         kps , des = sift.detectAndCompute(img,None)
 
-        num_image, _ = path.split(".")
-        np.savetxt("SIFT/"+str(num_image)+".txt" ,des)
-        progressBar.setValue(100*((i+1)/len(os.listdir(filenames))))
-        
-        featureSum += len(kps)
+        if des is None:
+            print('Nope')
+        else:
+
+            saving_path = path.split("/")[-1]
+            image, _ = saving_path.split(".")
+            np.savetxt("SIFT/"+str(image)+".txt" ,des)
+            progressBar.setValue(100*((i+1)/len(listImages)))
+            
+            featureSum += len(kps)
         i+=1
     print("Indexation SIFT terminée !!!!")    
 
 
-def generateORB(filenames, progressBar):
+def generateORB(filenames, progressBar,listImages):
     if not os.path.isdir("ORB"):
         os.mkdir("ORB")
     i=0
-    for path in os.listdir(filenames):
-        img = cv2.imread(filenames+"/"+path)
+    for path in listImages:
+        img = cv2.imread(path)
         orb = cv2.ORB_create()
         key_point1,descrip1 = orb.detectAndCompute(img,None)
         
-        num_image, _ = path.split(".")
-        np.savetxt("ORB/"+str(num_image)+".txt" ,descrip1 )
-        progressBar.setValue(100*((i+1)/len(os.listdir(filenames))))
-        i+=1
+        if descrip1 is None:
+            print('Nope')
+        
+        else : 
+            saving_path = path.split("/")[-1]
+            image, _ = saving_path.split(".")
+            np.savetxt("ORB/"+str(image)+".txt" ,descrip1)
+            progressBar.setValue(100*((i+1)/len(listImages)))
+            i+=1
     print("indexation ORB terminée !!!!")
 
-def generateGLCM(filenames, progressBar):
+def generateGLCM(filenames, progressBar,listImages):
     if not os.path.isdir("GLCM"):
         os.mkdir("GLCM")
     distances = [1, -1]
     angles = [0, np.pi/4, np.pi/2, 3*np.pi/4]
     i = 0
-    for path in os.listdir(filenames):
-        image = cv2.imread(filenames + "/" + path)
+    for path in listImages:
+        image = cv2.imread(path)
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         gray = img_as_ubyte(gray)
         glcmMatrix = greycomatrix(gray, distances=distances, angles=angles, normed=True)

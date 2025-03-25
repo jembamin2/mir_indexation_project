@@ -158,17 +158,17 @@ class Ui_MainWindow(object):
         #Calculer les descripteurs
         if self.Dossier_images and self.checkBox_SIFT.isChecked():
             start = time.time()
-            functions.generateSIFT(self.Dossier_images, self.progressBar)
+            functions.generateSIFT(self.Dossier_images, self.progressBar,self.list_images)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_ORB.isChecked():
             start = time.time()
-            functions.generateORB(self.Dossier_images, self.progressBar)
+            functions.generateORB(self.Dossier_images, self.progressBar,self.list_images)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_HistC.isChecked():
             start = time.time()
-            functions.generateHistogramme_Color(self.Dossier_images, self.progressBar)
+            functions.generateHistogramme_Color(self.Dossier_images, self.progressBar,self.list_images)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_HSV.isChecked():
