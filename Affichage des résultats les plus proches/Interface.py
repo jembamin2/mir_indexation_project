@@ -21,7 +21,7 @@ from skimage import exposure
 from matplotlib import pyplot as plt
 from functions import extractReqFeatures, showDialog, generateSIFT,generateHistogramme_HSV, generateHistogramme_Color, generateORB
 from distances import *
-filenames= "Images"
+filenames= "MIR_DATASETS_B"
 folder_model=""
 import time
 
@@ -295,6 +295,22 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
 
+        self.checkBox_20 = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_20.setGeometry(QtCore.QRect(830, 120, 41, 17))
+        font = QtGui.QFont()
+        font.setFamily("Calibri")
+        font.setPointSize(11)
+        font.setBold(True)
+        font.setWeight(75)
+        self.checkBox_20.setFont(font)
+        self.checkBox_20.setObjectName("checkBox_20")
+        self.checkBox_20.setChecked(True)
+        
+        self.checkBox_50 = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_50.setGeometry(QtCore.QRect(880, 120, 41, 17))
+        self.checkBox_50.setFont(font)
+        self.checkBox_50.setObjectName("checkBox_50")
+
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -302,6 +318,9 @@ class Ui_MainWindow(object):
         self.charger_desc.clicked.connect(self.loadFeatures)
         self.chercher.clicked.connect(self.Recherche)
         self.calcul_RP.clicked.connect(self.rappel_precision)
+
+        self.checkBox_20.toggled.connect(self.toggle_checkboxes_20)
+        self.checkBox_50.toggled.connect(self.toggle_checkboxes_50)
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -328,6 +347,16 @@ class Ui_MainWindow(object):
         self.charger.setText(_translate("MainWindow", "Charger"))
         self.label_3.setText(_translate("MainWindow", "Requête"))
         self.charger_desc.setText(_translate("MainWindow", "Charger descripteurs"))
+        self.checkBox_20.setText(_translate("MainWindow", "20"))
+        self.checkBox_50.setText(_translate("MainWindow", "50"))
+
+    def toggle_checkboxes_20(self):
+        if self.checkBox_20.isChecked():
+            self.checkBox_50.setChecked(False)
+    
+    def toggle_checkboxes_50(self):
+        if self.checkBox_50.isChecked():
+            self.checkBox_20.setChecked(False)
 
     def Ouvrir(self, MainWindow):
         global fileName
@@ -341,22 +370,22 @@ class Ui_MainWindow(object):
     def loadFeatures(self, MainWindow):
         folder_model=""
         if self.checkBox_HistC.isChecked():
-            folder_model = './BGR'
+            folder_model = '../BGR'
             self.algo_choice=1
         if self.checkBox_HSV.isChecked():
-            folder_model = './HSV'
+            folder_model = '../HSV'
             self.algo_choice=2
         if self.checkBox_SIFT.isChecked():
-            folder_model = './SIFT'
+            folder_model = '../SIFT'
             self.algo_choice=3
         if self.checkBox_ORB.isChecked():
-            folder_model = './ORB'
+            folder_model = '../ORB'
             self.algo_choice=4
         if self.checkBox_GLCM.isChecked():
-            folder_model = './GLCM'
+            folder_model = '../GLCM'
             self.algo_choice=5
         if self.checkBox_LBP.isChecked():
-            folder_model = './LBP'
+            folder_model = '../LBP'
             self.algo_choice=6
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
@@ -377,15 +406,20 @@ class Ui_MainWindow(object):
             ##Charger les features de la base de données.
         self.features1 = []
         pas=0
+        intermidiate_path = {"baboon":"baboon","barnspider":"barn spider","bluejay":"blue jay","boxer":"boxer","bulbul":"bulbul","Chihuahua":"Chihuahua","chimpanzee":"chimpanzee","dogfish":"dogfish","eagleray":"eagle ray","gardenspider":"garden spider","goldenretriever":"golden retriever","gorilla":"gorilla","greatgreyowl":"great grey owl","guitarfish":"guitarfish","hammerhead":"hammerhead","Labradorretriever":"Labrador retriever","macaque":"macaque",'orangutan':'orangutan',"orb-weavingspider":"orb-weaving spider","parrot":"parrot","ray":"ray","robin":"robin","Rottweiler":"Rottweiler","Siberianhusky":"Siberian husky","squirrelmonkey":"squirrel monkey","tarantula":"tarantula","tigershark":"tiger shark","trap-doorspider":"trap-door spider","vulture":"vulture","wolfspider":"wolf spider"}
         print("chargement de descripteurs en cours ...")
         for j in os.listdir(folder_model): #folder_model : dossier de features
             data=os.path.join(folder_model,j)
             if not data.endswith(".txt"):
                 continue
             feature = np.loadtxt(data)
-            self.features1.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+            image_name = os.path.basename(data).split('.')[0]
+            species = intermidiate_path[image_name.split('_')[3]]
+            self.features1.append((os.path.join(filenames,species,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+            if pas==100:
+                print(self.features1[0][0])
             pas += 1 
-            self.progressBar.setValue(int(100*((pas+1)/1000)))
+            self.progressBar.setValue(int(100*((pas+1)/4500)))
         if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked() and not self.checkBox_HOG.isChecked() and not self.checkBox_Moments.isChecked():
             print("Merci de sélectionner au moins un descripteur dans le menu")
             showDialog()
@@ -399,6 +433,10 @@ class Ui_MainWindow(object):
             ##Generer les features de l'images requete
             req = extractReqFeatures(fileName, self.algo_choice)
             ##Definition du nombre de voisins
+            if self.toggle_checkboxes_20():
+                self.sortie = 20
+            else : 
+                self.sortie = 50
             self.sortie = 9
             #Aller chercher dans la liste de l'interface la distance choisie
             distanceName=self.comboBox.currentText()
@@ -407,10 +445,16 @@ class Ui_MainWindow(object):
             self.path_image_plus_proches = []
             self.nom_image_plus_proches = []
             for k in range(self.sortie):
-                self.path_image_plus_proches.append(voisins[k][0])
+                paths = "../"+voisins[k][0]
+                self.path_image_plus_proches.append(paths)
                 self.nom_image_plus_proches.append(os.path.basename(voisins[k][0]))
             #Nombre de colonnes pour l'affichage
-            col=3
+            #print(self.path_image_plus_proches)
+            if self.sortie==20:
+                col=4
+            elif self.sortie==50:
+                col=5
+            col = 3
             k=0
             for i in range(math.ceil(self.sortie/col)):
                 for j in range(col):
@@ -438,11 +482,14 @@ class Ui_MainWindow(object):
         precisions=[]
         filename_req=os.path.basename(fileName)
         num_image, _ = filename_req.split(".")
+        num_image = num_image.split("_")[-1]
         classe_image_requete = int(num_image)/100
         val = 0
 
         for j in range(self.sortie):
-            classe_image_proche=(int(self.nom_image_plus_proches[j].split('.')[0]))/100
+            path = self.nom_image_plus_proches[j].split(".")[0]
+            path = path.split("_")[-1]
+            classe_image_proche=(int(path))/100
             classe_image_requete = int(classe_image_requete)
             classe_image_proche = int(classe_image_proche)
             if classe_image_requete==classe_image_proche:
