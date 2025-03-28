@@ -77,6 +77,9 @@ class Ui_MainWindow(object):
         self.checkBox_GLCM = QtWidgets.QCheckBox(self.centralwidget)
         self.checkBox_GLCM.setGeometry(QtCore.QRect(650, 10, 81, 21))
         self.checkBox_GLCM.setObjectName("checkBox_GLCM")
+        self.checkBox_LBP = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_LBP.setGeometry(QtCore.QRect(780, 10, 81, 21))
+        self.checkBox_LBP.setObjectName("checkBox_LBP")
         self.indexer_2 = QtWidgets.QPushButton(self.centralwidget)
         self.indexer_2.setGeometry(QtCore.QRect(930, 50, 71, 51))
         self.indexer_2.setObjectName("indexer_2")
@@ -109,6 +112,7 @@ class Ui_MainWindow(object):
         self.checkBox_HistC.setText(_translate("MainWindow", "Hist Couleur"))
         self.checkBox_HSV.setText(_translate("MainWindow", "Hist HSV"))
         self.checkBox_GLCM.setText(_translate("MainWindow", "GLCM"))
+        self.checkBox_LBP.setText(_translate("MainWindow", "LBP"))
         self.indexer_2.setText(_translate("MainWindow", "Quitter"))
     
     def Ouvrir(self, MainWindow):
@@ -179,6 +183,11 @@ class Ui_MainWindow(object):
         if self.Dossier_images and self.checkBox_GLCM.isChecked():
             start = time.time()
             functions.generateGLCM(self.Dossier_images, self.progressBar,self.list_images)
+            print(time.time()-start)
+        
+        if self.Dossier_images and self.checkBox_LBP.isChecked():
+            start = time.time()
+            functions.generateLBP(self.Dossier_images, self.progressBar,self.list_images)
             print(time.time()-start)
 
         if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked():

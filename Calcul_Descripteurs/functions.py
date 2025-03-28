@@ -135,8 +135,8 @@ def generateLBP(filenames, progressBar,listImages):
     if not os.path.isdir("LBP"):
         os.mkdir("LBP")
     i = 0
-    for path in os.listdir(filenames):
-        img = cv2.imread(filenames + "/" + path)
+    for path in listImages:
+        img = cv2.imread(path)
         points = 8
         radius = 1
         method = 'default'
@@ -150,8 +150,13 @@ def generateLBP(filenames, progressBar,listImages):
                 subVector = fullLBPmatrix[k * subSize[0]:(k + 1) * subSize[0], j * subSize[1]:(j + 1) * subSize[1]].ravel()
                 subHist, edges = np.histogram(subVector, bins=int(2 ** points), range=(0, 2 ** points))
                 histograms = np.concatenate((histograms, subHist), axis=None)
-        num_image, _ = path.split(".")
-        np.savetxt("LBP/" + str(num_image) + ".txt", histograms)
-        progressBar.setValue(100 * ((i + 1) / len(os.listdir(filenames))))
+            
+        if histograms is None:
+            print(f"Nope {path}")
+        else :
+            saving_path = path.split("/")[-1]
+            image, _ = saving_path.split(".")
+            np.savetxt("LBP/"+str(image)+".txt" ,histograms)
+        progressBar.setValue(100*((i+1)/len(listImages)))
         i += 1
     print("indexation LBP terminée !!!!")
