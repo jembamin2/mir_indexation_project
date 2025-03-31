@@ -162,32 +162,32 @@ class Ui_MainWindow(object):
         #Calculer les descripteurs
         if self.Dossier_images and self.checkBox_SIFT.isChecked():
             start = time.time()
-            functions.generateSIFT(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateSIFT(self.Dossier_images, self.progressBar)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_ORB.isChecked():
             start = time.time()
-            functions.generateORB(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateORB(self.Dossier_images, self.progressBar)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_HistC.isChecked():
             start = time.time()
-            functions.generateHistogramme_Color(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateHistogramme_Color(self.Dossier_images, self.progressBar)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_HSV.isChecked():
             start = time.time()
-            functions.generateHistogramme_HSV(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateHistogramme_HSV(self.Dossier_images, self.progressBar)
             print(time.time()-start)
 
         if self.Dossier_images and self.checkBox_GLCM.isChecked():
             start = time.time()
-            functions.generateGLCM(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateGLCM(self.Dossier_images, self.progressBar)
             print(time.time()-start)
         
         if self.Dossier_images and self.checkBox_LBP.isChecked():
             start = time.time()
-            functions.generateLBP(self.Dossier_images, self.progressBar,self.list_images)
+            functions.generateLBP(self.Dossier_images, self.progressBar)
             print(time.time()-start)
 
         if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked():

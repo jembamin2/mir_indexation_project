@@ -392,10 +392,10 @@ class Ui_MainWindow(object):
         if filenames:
                 if self.algo_choice==3 or self.algo_choice==4:
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Brute force","Flann"])
+                    self.comboBox.addItems(["Brute force","Flann","Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya"])
                 elif self.algo_choice==1 or self.algo_choice==2: 
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya"])
+                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya","Brute force","Flann"])
                 else :
                     self.comboBox.clear()
                     self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya,","Brute force","Flann"])
@@ -406,8 +406,18 @@ class Ui_MainWindow(object):
             ##Charger les features de la base de données.
         self.features1 = []
         pas=0
-        intermidiate_path = {"baboon":"baboon","barnspider":"barn spider","bluejay":"blue jay","boxer":"boxer","bulbul":"bulbul","Chihuahua":"Chihuahua","chimpanzee":"chimpanzee","dogfish":"dogfish","eagleray":"eagle ray","gardenspider":"garden spider","goldenretriever":"golden retriever","gorilla":"gorilla","greatgreyowl":"great grey owl","guitarfish":"guitarfish","hammerhead":"hammerhead","Labradorretriever":"Labrador retriever","macaque":"macaque",'orangutan':'orangutan',"orb-weavingspider":"orb-weaving spider","parrot":"parrot","ray":"ray","robin":"robin","Rottweiler":"Rottweiler","Siberianhusky":"Siberian husky","squirrelmonkey":"squirrel monkey","tarantula":"tarantula","tigershark":"tiger shark","trap-doorspider":"trap-door spider","vulture":"vulture","wolfspider":"wolf spider"}
-        print("chargement de descripteurs en cours ...")
+        for j in os.listdir(folder_model): #folder_model : dossier de features
+            data=os.path.join(folder_model,j)
+            if not data.endswith(".txt"):
+                continue
+            feature = np.loadtxt(data)
+            self.features1.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+            pas += 1 
+            self.progressBar.setValue(int(100*((pas+1)/4500)))
+        if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked() and not self.checkBox_HOG.isChecked() and not self.checkBox_Moments.isChecked():
+            print("Merci de sélectionner au moins un descripteur dans le menu")
+            showDialog()
+            '''
         for j in os.listdir(folder_model): #folder_model : dossier de features
             data=os.path.join(folder_model,j)
             if not data.endswith(".txt"):
@@ -423,7 +433,7 @@ class Ui_MainWindow(object):
         if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked() and not self.checkBox_HOG.isChecked() and not self.checkBox_Moments.isChecked():
             print("Merci de sélectionner au moins un descripteur dans le menu")
             showDialog()
-
+'''
     def Recherche(self, MainWindow):
         #Remise à 0 de la grille des voisins
         for i in reversed(range(self.gridLayout.count())):
