@@ -31,8 +31,29 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1203, 544)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        # Scroll Area for Grid Layout
+        self.scrollArea = QtWidgets.QScrollArea(self.centralwidget)
+        self.scrollArea.setGeometry(QtCore.QRect(380, 180, 551, 251))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 500))  # Adjust the height as needed
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        
+        self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setObjectName("gridLayout")
+        
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.scrollArea.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setGeometry(QtCore.QRect(120, 10, 251, 31))
         font = QtGui.QFont()
@@ -169,9 +190,11 @@ class Ui_MainWindow(object):
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(380, 180, 551, 251))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
+        '''
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
+        '''
         self.label_courbe = QtWidgets.QLabel(self.centralwidget)
         self.label_courbe.setGeometry(QtCore.QRect(940, 180, 251, 251))
         font = QtGui.QFont()
@@ -390,12 +413,12 @@ class Ui_MainWindow(object):
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         if filenames:
-                if self.algo_choice==3 or self.algo_choice==4:
+                if self.algo_choice==3 or self.algo_choice==4 or self.algo_choice==5 or self.algo_choice==6:
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Brute force","Flann","Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya"])
+                    self.comboBox.addItems(["Brute force","Flann"])
                 elif self.algo_choice==1 or self.algo_choice==2: 
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya","Brute force","Flann"])
+                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya"])
                 else :
                     self.comboBox.clear()
                     self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya,","Brute force","Flann"])
@@ -447,7 +470,7 @@ class Ui_MainWindow(object):
                 self.sortie = 20
             else : 
                 self.sortie = 50
-            self.sortie = 9
+            #self.sortie = 9
             #Aller chercher dans la liste de l'interface la distance choisie
             distanceName=self.comboBox.currentText()
             #Générer les voisins
@@ -464,6 +487,7 @@ class Ui_MainWindow(object):
                 col=4
             elif self.sortie==50:
                 col=5
+                '''
             col = 3
             k=0
             for i in range(math.ceil(self.sortie/col)):
@@ -481,7 +505,43 @@ class Ui_MainWindow(object):
                     label.setAlignment(QtCore.Qt.AlignCenter)
                     label.setPixmap(pixmap.scaled(0.3*width, 0.3*height,QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation))
                     self.gridLayout.addWidget(label, i, j)
-                    k+=1
+                    k+=1'''
+                col = 3
+                k = 0
+
+                # On nettoie d'abord le layout pour éviter l'accumulation
+                while self.gridLayout.count():
+                    item = self.gridLayout.takeAt(0)
+                    if item.widget():
+                        item.widget().deleteLater()
+
+                # Calculer la hauteur requise en fonction du nombre de lignes
+                num_rows = math.ceil(self.sortie / col)
+                row_height = 150  # Hauteur estimée d'une ligne d'image
+                self.scrollAreaWidgetContents.setMinimumHeight(num_rows * row_height)
+
+                for i in range(num_rows):
+                    for j in range(col):
+                        if k >= self.sortie:
+                            break  # Évite une erreur si le nombre d'images est inférieur à prévu
+
+                        img = cv2.imread(self.path_image_plus_proches[k], 1)  # Charger l'image
+                        b, g, r = cv2.split(img)  # Remettre en RGB pour affichage correct
+                        img = cv2.merge([r, g, b])
+
+                        # Convertir en QImage
+                        height, width, channel = img.shape
+                        bytesPerLine = 3 * width
+                        qImg = QtGui.QImage(img.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+                        pixmap = QtGui.QPixmap.fromImage(qImg)
+
+                        # Ajouter un QLabel pour afficher l'image
+                        label = QtWidgets.QLabel("")
+                        label.setAlignment(QtCore.Qt.AlignCenter)
+                        label.setPixmap(pixmap.scaled(0.3 * width, 0.3 * height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+
+                        self.gridLayout.addWidget(label, i, j)
+                        k += 1
         else :
             print("Il faut choisir une méthode !")
 
