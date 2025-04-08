@@ -41,11 +41,11 @@ class Ui_MainWindow(object):
         self.scrollArea.setObjectName("scrollArea")
         
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 550, 500))  # Adjust the height as needed
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         
         self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(10)
         self.gridLayout.setObjectName("gridLayout")
         
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
@@ -187,10 +187,11 @@ class Ui_MainWindow(object):
         self.label_5.setFrameShape(QtWidgets.QFrame.Panel)
         self.label_5.setAlignment(QtCore.Qt.AlignCenter)
         self.label_5.setObjectName("label_5")
+        '''
         self.gridLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.gridLayoutWidget.setGeometry(QtCore.QRect(380, 180, 551, 251))
         self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        '''
+        
         self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.gridLayout.setObjectName("gridLayout")
