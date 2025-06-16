@@ -118,11 +118,25 @@ def extractReqFeatures(fileName,algo_choice):
             key_point1,vect_features = orb.detectAndCompute(img,None)
 
         elif algo_choice==5: #GLCM
+            
             img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             img_gray = img_as_ubyte(img_gray)
+            '''
             glcm = greycomatrix(img_gray, [1], [0], 256, symmetric=True, normed=True)
             vect_features = np.array([greycoprops(glcm, 'dissimilarity')[0, 0], greycoprops(glcm, 'correlation')[0, 0], greycoprops(glcm, 'homogeneity')[0, 0], greycoprops(glcm, 'contrast')[0, 0]])
+            '''
+            distances = [1, -1]
+            angles = [0, np.pi/4, np.pi/2, 3*np.pi/4]
+            glcm = greycomatrix(img_gray, distances=distances, angles=angles, normed=True, symmetric=True)
 
+            vect_features = np.array([
+                greycoprops(glcm, 'contrast').ravel(),
+                greycoprops(glcm, 'dissimilarity').ravel(),
+                greycoprops(glcm, 'homogeneity').ravel(),
+                greycoprops(glcm, 'energy').ravel(),
+                greycoprops(glcm, 'correlation').ravel(),
+                greycoprops(glcm, 'ASM').ravel()
+            ]).ravel()
         elif algo_choice==6: #LBP
             img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             radius = 3

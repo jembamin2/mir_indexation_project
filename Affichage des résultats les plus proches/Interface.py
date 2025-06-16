@@ -345,6 +345,8 @@ class Ui_MainWindow(object):
 
         self.checkBox_20.toggled.connect(self.toggle_checkboxes_20)
         self.checkBox_50.toggled.connect(self.toggle_checkboxes_50)
+        self.aps = []
+        self.selected_top = 20
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -356,8 +358,8 @@ class Ui_MainWindow(object):
         self.checkBox_ORB.setText(_translate("MainWindow", "ORB"))
         self.checkBox_GLCM.setText(_translate("MainWindow", "GLCM"))
         self.checkBox_LBP.setText(_translate("MainWindow", "LBP"))
-        self.checkBox_HOG.setText(_translate("MainWindow", "HOG"))
-        self.checkBox_Moments.setText(_translate("MainWindow", "Mom."))
+        self.checkBox_HOG.setText(_translate("MainWindow", "H+G"))
+        self.checkBox_Moments.setText(_translate("MainWindow", "H+O"))
         self.label_2.setText(_translate("MainWindow", "Image requête"))
         self.label_4.setText(_translate("MainWindow", "Recherche"))
         self.label_5.setText(_translate("MainWindow", "Rappel/Précision"))
@@ -367,7 +369,7 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "Courbe R/P"))
         self.chercher.setText(_translate("MainWindow", "Recherche"))
         self.calcul_RP.setText(_translate("MainWindow", "Calculer la courbe R/P"))
-        self.checkBox_autre.setText(_translate("MainWindow", "Autre"))
+        self.checkBox_autre.setText(_translate("MainWindow", "autre"))
         self.charger.setText(_translate("MainWindow", "Charger"))
         self.label_3.setText(_translate("MainWindow", "Requête"))
         self.charger_desc.setText(_translate("MainWindow", "Charger descripteurs"))
@@ -377,10 +379,12 @@ class Ui_MainWindow(object):
     def toggle_checkboxes_20(self):
         if self.checkBox_20.isChecked():
             self.checkBox_50.setChecked(False)
+            self.selected_top = 20
     
     def toggle_checkboxes_50(self):
         if self.checkBox_50.isChecked():
             self.checkBox_20.setChecked(False)
+            self.selected_top = 50
 
     def Ouvrir(self, MainWindow):
         global fileName
@@ -411,175 +415,233 @@ class Ui_MainWindow(object):
         if self.checkBox_LBP.isChecked():
             folder_model = '../LBP'
             self.algo_choice=6
+        if self.checkBox_HOG.isChecked(): #pour glcm+HSV
+            folder_model1 = '../HSV'
+            folder_model2 = '../GLCM'
+            self.algo_choice=7
+        if self.checkBox_Moments.isChecked(): #pour ORB+HSV
+            folder_model1 = '../HSV'
+            folder_model2 = '../ORB'
+            self.algo_choice=8
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         if filenames:
-                if self.algo_choice==3 or self.algo_choice==4 or self.algo_choice==5 or self.algo_choice==6:
+                if self.algo_choice==3 or self.algo_choice==4:
                     self.comboBox.clear()
                     self.comboBox.addItems(["Brute force","Flann"])
-                elif self.algo_choice==1 or self.algo_choice==2: 
+                elif self.algo_choice==1 or self.algo_choice==2 or self.algo_choice==5 or self.algo_choice==6: 
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya"])
+                    self.comboBox.addItems(["Euclidienne","Correlation","Intersection","Bhattacharyya",'Manhattan'])
+                elif self.algo_choice==7: #pour HSV+GLCM
+                    self.comboBox.clear()
+                    self.comboBox.addItems(["Intersection_Manhattan","Intersection_Correlation"])
+                elif self.algo_choice==8: #pour HSV + ORB
+                    self.comboBox.clear()
+                    self.comboBox.addItems(["Intersection_Brute force","Intersection_Flann"])
                 else :
                     self.comboBox.clear()
-                    self.comboBox.addItems(["Euclidienne","Correlation","Chicarre","Intersection","Bhattacharyya,","Brute force","Flann"])
+                    self.comboBox.addItems(["Brute force","Flann"])
          
 
         if len(filenames)<1:
             print("Merci de charger une image avec le bouton Ouvrir")
             ##Charger les features de la base de données.
-        self.features1 = []
+        if self.algo_choice<7: 
+            self.features1 = []
+        else:
+            self.features1 = []
+            self.features2 = []
         pas=0
-        for j in os.listdir(folder_model): #folder_model : dossier de features
-            data=os.path.join(folder_model,j)
-            if not data.endswith(".txt"):
-                continue
-            feature = np.loadtxt(data)
-            self.features1.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
-            pas += 1 
-            self.progressBar.setValue(int(100*((pas+1)/4500)))
+
+        #si on a qu'une feature
+        if self.algo_choice<7:
+            for j in os.listdir(folder_model): #folder_model : dossier de features
+                data=os.path.join(folder_model,j)
+                if not data.endswith(".txt"):
+                    continue
+                feature = np.loadtxt(data)
+                self.features1.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+                pas += 1 
+                self.progressBar.setValue(int(100*((pas+1)/4500)))
+        
+        #si on en a plusieurs, on va répéter plusieurs fois la même opération et tout concaténer dans une liste
+        elif self.algo_choice==7 or self.algo_choice == 8: 
+            for j in os.listdir(folder_model1): 
+                data=os.path.join(folder_model1,j)
+                if not data.endswith(".txt"):
+                    continue
+                feature = np.loadtxt(data)
+                self.features1.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+                pas += 1 
+                self.progressBar.setValue(int(50*((pas+1)/4500)))
+            pas = 0
+            for j in os.listdir(folder_model2):
+                data=os.path.join(folder_model2,j)
+                if not data.endswith(".txt"):
+                    continue
+                feature = np.loadtxt(data)
+                self.features2.append((os.path.join(filenames,os.path.basename(data).split('.')[0]+'.jpg'),feature))
+                pas += 1 
+                self.progressBar.setValue(int((50+50*((pas+1)/4500))))
+         
+                
         if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked() and not self.checkBox_HOG.isChecked() and not self.checkBox_Moments.isChecked():
             print("Merci de sélectionner au moins un descripteur dans le menu")
             showDialog()
-            '''
-        for j in os.listdir(folder_model): #folder_model : dossier de features
-            data=os.path.join(folder_model,j)
-            if not data.endswith(".txt"):
-                continue
-            feature = np.loadtxt(data)
-            image_name = os.path.basename(data).split('.')[0]
-            species = intermidiate_path[image_name.split('_')[3]]
-            self.features1.append((os.path.join(filenames,species,os.path.basename(data).split('.')[0]+'.jpg'),feature))
-            if pas==100:
-                print(self.features1[0][0])
-            pas += 1 
-            self.progressBar.setValue(int(100*((pas+1)/4500)))
-        if not self.checkBox_SIFT.isChecked() and not self.checkBox_HistC.isChecked() and not self.checkBox_HSV.isChecked() and not self.checkBox_ORB.isChecked() and not self.checkBox_GLCM.isChecked() and not self.checkBox_LBP.isChecked() and not self.checkBox_HOG.isChecked() and not self.checkBox_Moments.isChecked():
-            print("Merci de sélectionner au moins un descripteur dans le menu")
-            showDialog()
-'''
+            
     def Recherche(self, MainWindow):
+
+        start = time.time()
         #Remise à 0 de la grille des voisins
         for i in reversed(range(self.gridLayout.count())):
             self.gridLayout.itemAt(i).widget().setParent(None)
         voisins=""
-        if self.algo_choice !=0:
+
+        #si on a qu'un descripteur
+        if self.algo_choice !=0 and self.algo_choice<7:
             ##Generer les features de l'images requete
             req = extractReqFeatures(fileName, self.algo_choice)
             ##Definition du nombre de voisins
-            if self.toggle_checkboxes_20():
+            if self.selected_top == 20:
                 self.sortie = 20
-            else : 
+            else:
                 self.sortie = 50
-            #self.sortie = 9
+            print("Nombre de voisins à afficher :", self.sortie)
+
             #Aller chercher dans la liste de l'interface la distance choisie
             distanceName=self.comboBox.currentText()
             #Générer les voisins
             voisins=getkVoisins(self.features1, req, self.sortie, distanceName )
+
+        #si on a plusieurs descripteurs on va extraire deux request, une par descripteur
+        elif self.algo_choice>=7: #pour les combinaisons
+
+            if self.algo_choice==7: #pour HSV+GLCM
+                req1 = extractReqFeatures(fileName, 2)  # HSV
+                req2 = extractReqFeatures(fileName, 5)  # GLCM
+            elif self.algo_choice==8: #pour HSV+ORB
+                req1 = extractReqFeatures(fileName, 2)  # HSV
+                req2 = extractReqFeatures(fileName, 4)  # ORB
+               
+            if self.selected_top == 20:
+                self.sortie = 20
+            else:
+                self.sortie = 50
+            
+            distanceName=self.comboBox.currentText()
+            distanceName = distanceName.split("_")
+
+            req = (req1, req2)
+            features = (self.features1, self.features2)
+            voisins=getkVoisins(features, req, self.sortie, distanceName , combine=True)
+        if self.algo_choice!=0:
             self.path_image_plus_proches = []
             self.nom_image_plus_proches = []
             for k in range(self.sortie):
                 paths = "../"+voisins[k][0]
                 self.path_image_plus_proches.append(paths)
                 self.nom_image_plus_proches.append(os.path.basename(voisins[k][0]))
+
             #Nombre de colonnes pour l'affichage
-            #print(self.path_image_plus_proches)
-            if self.sortie==20:
-                col=4
-            elif self.sortie==50:
-                col=5
-                '''
             col = 3
-            k=0
-            for i in range(math.ceil(self.sortie/col)):
+            k = 0
+            print("Nombre de voisins à afficher :", self.sortie)
+            print("Nombre de voisins :", len(voisins))
+            # On nettoie d'abord le layout pour éviter l'accumulation
+            while self.gridLayout.count():
+                item = self.gridLayout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+
+            # Calculer la hauteur requise en fonction du nombre de lignes
+            num_rows = math.ceil(self.sortie / col)
+            row_height = 150  # Hauteur estimée d'une ligne d'image
+            self.scrollAreaWidgetContents.setMinimumHeight(num_rows * row_height)
+
+            for i in range(num_rows):
                 for j in range(col):
-                    img = cv2.imread(self.path_image_plus_proches[k],1) #load image
-                    #Remise de l'image en RGB pour l'afficher correctement
-                    b,g,r = cv2.split(img) # get b,g,r
-                    img = cv2.merge([r,g,b]) # switch it to rgb
-                    #convert image to QImage
+                    if k >= self.sortie:
+                        break  # Évite une erreur si le nombre d'images est inférieur à prévu
+
+                    img = cv2.imread(self.path_image_plus_proches[k], 1)  # Charger l'image
+                    b, g, r = cv2.split(img)  # Remettre en RGB pour affichage correct
+                    img = cv2.merge([r, g, b])
+
+                    # Convertir en QImage
                     height, width, channel = img.shape
                     bytesPerLine = 3 * width
-                    qImg = QtGui.QImage(img.data, width, height, bytesPerLine,QtGui.QImage.Format_RGB888)
-                    pixmap=QtGui.QPixmap.fromImage(qImg)
+                    qImg = QtGui.QImage(img.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+                    pixmap = QtGui.QPixmap.fromImage(qImg)
+
+                    # Ajouter un QLabel pour afficher l'image
                     label = QtWidgets.QLabel("")
                     label.setAlignment(QtCore.Qt.AlignCenter)
-                    label.setPixmap(pixmap.scaled(0.3*width, 0.3*height,QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation))
+                    label.setPixmap(pixmap.scaled(0.3 * width, 0.3 * height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
+
                     self.gridLayout.addWidget(label, i, j)
-                    k+=1'''
-                col = 3
-                k = 0
-
-                # On nettoie d'abord le layout pour éviter l'accumulation
-                while self.gridLayout.count():
-                    item = self.gridLayout.takeAt(0)
-                    if item.widget():
-                        item.widget().deleteLater()
-
-                # Calculer la hauteur requise en fonction du nombre de lignes
-                num_rows = math.ceil(self.sortie / col)
-                row_height = 150  # Hauteur estimée d'une ligne d'image
-                self.scrollAreaWidgetContents.setMinimumHeight(num_rows * row_height)
-
-                for i in range(num_rows):
-                    for j in range(col):
-                        if k >= self.sortie:
-                            break  # Évite une erreur si le nombre d'images est inférieur à prévu
-
-                        img = cv2.imread(self.path_image_plus_proches[k], 1)  # Charger l'image
-                        b, g, r = cv2.split(img)  # Remettre en RGB pour affichage correct
-                        img = cv2.merge([r, g, b])
-
-                        # Convertir en QImage
-                        height, width, channel = img.shape
-                        bytesPerLine = 3 * width
-                        qImg = QtGui.QImage(img.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
-                        pixmap = QtGui.QPixmap.fromImage(qImg)
-
-                        # Ajouter un QLabel pour afficher l'image
-                        label = QtWidgets.QLabel("")
-                        label.setAlignment(QtCore.Qt.AlignCenter)
-                        label.setPixmap(pixmap.scaled(0.3 * width, 0.3 * height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation))
-
-                        self.gridLayout.addWidget(label, i, j)
-                        k += 1
+                    k += 1
+            print(f'Temps de recherche : {time.time() - start:.2f} secondes')
+            print(f'Temps de recherche par image: {(time.time() - start)/self.sortie} secondes')
+        
         else :
             print("Il faut choisir une méthode !")
 
-       
+      
     def rappel_precision(self):
+        #on stock dans un dico le nombre d'occurences de chaque classe pour le calcul du rappel
+        dico = {}
+        
+        for nom_fichier in os.listdir('../MIR_DATASETS_B'):
+            num_classe = nom_fichier.split('.')[0]  
+            type_classe = num_classe.split('_')[-2]  
+
+            if type_classe not in dico:
+                dico[type_classe] = 1
+            else:
+                dico[type_classe] += 1
+
+        #calcul de la précision et du rappel
         rappel_precision=[]
         rappels=[]
         precisions=[]
         filename_req=os.path.basename(fileName)
         num_image, _ = filename_req.split(".")
-        num_image = num_image.split("_")[-1]
-        classe_image_requete = int(num_image)/100
+        type_image = num_image.split("_")[-2]
+        classe_image_requete = type_image
         val = 0
 
         for j in range(self.sortie):
             path = self.nom_image_plus_proches[j].split(".")[0]
-            path = path.split("_")[-1]
-            classe_image_proche=(int(path))/100
-            classe_image_requete = int(classe_image_requete)
-            classe_image_proche = int(classe_image_proche)
+            path = path.split("_")[-2]
+            classe_image_requete = type_image
+            classe_image_proche = path
             if classe_image_requete==classe_image_proche:
                 rappel_precision.append(1) #Bonne classe (pertinant)
                 val += 1
             else:
                 rappel_precision.append(0) #Mauvaise classe (non pertinant)
+        self.r_precision = val/self.sortie #calcul de la r-précision
         for i in range(self.sortie):
             j=i
             val=0
             while(j>=0):
                 if rappel_precision[j]:
-                    val+=1
+                    val+=1 + 1e-8
                 j-=1
-            precision = val/(i+1)
-            rappel = val/self.sortie
+            precision = val/(i+1) 
+            rappel = val/dico[classe_image_requete] #calcul du rappel
             rappels.append(rappel)
             precisions.append(precision)
-                              
+
+        #calcul de l'average precision
+        ap = 0
+        for i in range(1, len(rappels)):
+            delta_r = rappels[i] - rappels[i - 1]
+            ap += precisions[i] * delta_r
+        print(f'Average Precision (AP) for image {num_image}: {ap}')
+        print(f'Precision for image {num_image}: {precisions[-1]}')
+        print(f'Recall for image {num_image}: {rappels[-1]}')
+        self.aps.append(ap)
         #Création de la courbe R/P
         plt.plot(rappels,precisions)
         plt.xlabel("Recall")
@@ -610,6 +672,15 @@ class Ui_MainWindow(object):
         height = self.label_requete.frameGeometry().height()
         self.label_courbe.setAlignment(QtCore.Qt.AlignCenter)
         self.label_courbe.setPixmap(pixmap.scaled(width, height, QtCore.Qt.KeepAspectRatio,QtCore.Qt.SmoothTransformation))
+
+    def MeanAveragePrecision(self):
+        #Calcul de la moyenne des précisions
+        self.map = 0
+        for i in self.aps:
+            self.map += i
+        self.map /= len(self.aps)
+
+        print("Mean Average Precision (MAP):", self.map)
 
 if __name__ == "__main__":
     import sys
